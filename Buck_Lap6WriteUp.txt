@@ -1,0 +1,19 @@
+Josh Buck
+
+Project 6 Notes:
+
+Req1: Change Message Name
+- The Hardest part was figuring out where the original string was stored. There was a databuffer but that seemed to be used for multiple dialog boxes, and would not maintain a constant value. Someone tipped me off that IDA FREE would not show me where the actual string was loaded from (in the resource section), so I used the hex editor and was able to find that pesky address at 0x01010C04. 
+- The next challenge was changing the data from read only to read-write. I used VirtualProtect() to do so and changed it back when I was done. Works great. 
+- I am not sure how much data was allocated for the original string, but there is a chance that the original string could be overflowed if a new string was sufficiently large. I tried about 200 characters and crashed. 
+
+Req2: Change the stats games won
+- It was pretty clear that, upon initialization, the game stored data in the Windows registry, so it was only a matter of modifying the windows registry value for games "won". I simply googled windows registry, found a few solutions, including a nice stack-overflow example of RegOpenKeyEx(). It did not work first try, but a classmate showed me that I forgot one of the parameters, so it should be working now. 
+
+Req3: Win after the next VALID move
+- The part that stumps me here is what you mean by "Valid" move. I'm sure everybody will find the cheat flag that, when set to 2, auto wins the game upon the next user action. It was very trivial to simply force set this flag to the value 2 and win on the next action, but this solution does NOT heck that the last move was VALID. 
+- There is a function that to us is called "isMoveValid()" (0x01003850), which has a handful of success terminations. It should be possible to change the return address of this function to go to a game win state, but the problem is that there does not appear to be a function like "winGame()", instead there is a flag that gets checked to see if the game is won. I was able to modify the address that isMoveValid() returns to, but I could not figure out how to insert a new function that would set the cheat flag to 2. Actually, I was able to direct isMoveValid() to 0x010020D3, where the cheat flag is set to two. The problem there is that then I miss the check of the cheat flag until the NEXT move. I suppose that I could make the function at 0x010020D3, where the cheat flag is set to 2, jump to the cheat flag check point. However, doing this breaks the game if you want to play again and win in only a single move. 
+
+Req4 & 5: Mess with the hotkeys or actuators.  
+- Initially, I tried to change the values in the switch statement that controls most of the game actions. Then I tried to just edit the hotkey/actuator table directly (specifically for Req4). However, everytime, my game would freeze up. Someone told me that it would be easier to overwrite the entire table. However, I could not get this to work either. 
+- The console seemed to indicate that there was a permissions level problem in Windows and that I do not have write access to the actuator table.  
